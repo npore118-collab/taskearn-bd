@@ -1,0 +1,16 @@
+<!doctype html><html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard — TaskEarn BD</title><link rel="stylesheet" href="/style.css"></head><body>
+<header><div class="brand">▶ TaskEarn <b>BD</b></div><nav><button onclick="logout()">Logout</button></nav></header>
+<main><section><h2 id="welcome">Dashboard</h2><div class="plans">
+<div class="plan"><small>বর্তমান Balance</small><strong id="balance">৳0</strong></div><div class="plan"><small>Tier</small><strong id="tier">Free</strong></div><div class="plan"><small>Referral</small><strong id="ref">—</strong></div></div>
+<h2>Available Tasks</h2><div id="tasks" class="steps"></div>
+<h2>Withdrawal</h2><div class="plan" style="max-width:600px;margin:auto"><input id="amount" placeholder="Amount (minimum ৳500)"><input id="method" placeholder="bKash / Nagad / Bank"><input id="account" placeholder="Account number"><button onclick="withdraw()">Request Withdrawal</button></div>
+<h2>Fair Spin</h2><div class="plan" style="max-width:600px;margin:auto;text-align:center"><p>প্রতি spin ৳10। ফলাফল random এবং predefined probability অনুযায়ী।</p><button onclick="spin()">SPIN — ৳10</button><p id="spinResult"></p></div></section></main>
+<script>
+const $=s=>document.querySelector(s);async function api(u,o={}){let r=await fetch(u,{headers:{'Content-Type':'application/json'},...o});let d=await r.json();if(!r.ok)throw Error(d.error);return d}
+async function load(){let d=await api('/api/me');if(!d.user)return location.href='/';$('#welcome').textContent='স্বাগতম, '+d.user.name;$('#balance').textContent='৳'+d.user.balance.toFixed(2);$('#tier').textContent=d.user.tier;$('#ref').textContent=d.user.referral;let t=await api('/api/tasks');$('#tasks').innerHTML=t.tasks.map(x=>`<div><h3>${x.title}</h3><p>${x.description||''}</p><b>Reward ৳${x.reward}</b><br><button ${x.completed?'disabled':''} onclick="complete(${x.id})">${x.completed?'Completed':'Complete Task'}</button></div>`).join('')}
+async function complete(id){try{alert((await api('/api/tasks/'+id+'/complete',{method:'POST'})).message);load()}catch(e){alert(e.message)}}
+async function withdraw(){try{let d=await api('/api/withdraw',{method:'POST',body:JSON.stringify({amount:Number($('#amount').value),method:$('#method').value,account:$('#account').value})});alert(d.message);load()}catch(e){alert(e.message)}}
+async function spin(){try{let d=await api('/api/spin',{method:'POST'});$('#spinResult').textContent='আপনি পেলেন: '+d.prize.label;load()}catch(e){alert(e.message)}}
+async function logout(){await api('/api/logout',{method:'POST'});location.href='/'}
+load();
+</script></body></html>
